@@ -1,25 +1,41 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import ImageUpload from './components/ImageUpload';
+import ProductDisplay from './components/ProductDisplay';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    const [searchResults, setSearchResults] = useState([]);
+    const [error, setError] = useState(null);
+
+    const handleImageUpload = async (formData) => {
+        try {
+            const response = await fetch('http://localhost:5024/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error uploading image');
+            }
+
+            const products = await response.json();
+            setSearchResults(products);
+            setError(null);
+        } catch (error) {
+            console.error('Error uploading image:', error.message);
+            setError('Internal Server Error. Please try again.');
+        }
+    };
+
+    return (
+        <div className="App">
+            <h1>Image Search App</h1>
+            <ImageUpload onFileUpload={handleImageUpload} />
+            {error && <div className="error-message">{error}</div>}
+            <ProductDisplay products={searchResults} />
+        </div>
+    );
+};
 
 export default App;
